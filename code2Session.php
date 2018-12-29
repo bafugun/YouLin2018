@@ -14,7 +14,7 @@ public function __construct($code)
 public function getSession()
 {
 	
-	$urlFormat="https://api.weixin.qq.com/sns/oauth2/access_token?appid=%s&secret=%s&code=%s&grant_type=authorization_code";
+	$urlFormat="https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code";
 	$url = sprintf($urlFormat,APPID,APPSECRET,$this->code);
 	$ret = $this->_execRequest($url);
 	$fp = fopen("codeurl","w");

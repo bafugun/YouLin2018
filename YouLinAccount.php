@@ -43,6 +43,8 @@ class YouLinAccount
 		
 		$db = new customDbConnection();
 		$sql = sprintf("select sessionID,openID from codeSessionOpenID where code='%s'",$code);
+		//echo "<br/>".$sql;
+
 		$dbSessionAndOpenID = $db->query($sql);
 		/*用户code 过期或者未登录过*/
 		if(empty($dbSessionAndOpenID))
@@ -56,7 +58,7 @@ class YouLinAccount
 				$arrRet["msg"] = "Get Empty Session_key.";
 				return $arrRet;
 			}
-			
+	
 			/*3. 判断是否合法*/
 			if(!array_key_exists("session_key",$arrcodeSession) || $arrcodeSession["errcode"])
 			{
@@ -79,11 +81,11 @@ class YouLinAccount
 		}
 		else
 		{
-			$openID =$dbSessionAndOpenID["openID"];
-			$sessionkey = $dbSessionAndOpenID["sessionID"];
+			$openID =$dbSessionAndOpenID[0]["openID"];
+			$sessionkey = $dbSessionAndOpenID[0]["sessionID"];
 		}
-		$recvRawData = $arrcodeSession["rawData"];
-		$currSignature = sha1($recvRawData + $sessionkey);
+		$recvRawData = $this->_arrData["rawData"];
+		$currSignature = sha1($recvRawData.$sessionkey);
 		/*验证签名的正确性*/
 		if($currSignature != $recvSignature)
 		{
@@ -91,19 +93,18 @@ class YouLinAccount
 			$arrRet["msg"] = "Signature is Failed.";
 			return $arrRet;
 		}
-		
+	
 		/*后台保存code、Session_KEY,OPENID三者数据，用于后续API使用*/
-		$sql = sprintf("insert into table codeSessionOpenID(openID,sessionID,code) values('%s','%s','%s') on  DUPLICATE key update sessionID=values(sessionID),code=values(code)",
-		               $openID,$sessionkey,$code);
+		$sql = sprintf("insert into  codeSessionOpenID(openID,sessionID,code) values('%s','%s','%s') on  DUPLICATE key update sessionID=values(sessionID),code=values(code)",$openID,$sessionkey,$code);
 		$db->exec($sql);
-		
-		
+
 		$arrRet["code"] = 0;
 		$arrRet["msg"] = "OK";
-		$jsonRaw = json_decode($recvRawData,true);
+		$jsonRaw = json_decode($this->_arrData["rawData"],true);
 		/*插入当前登录的用户*/
-		$sql = sprintf("insert into table YouLinAccount(OpenID,nickName,gender,city,province,country,avatarUrl) values ('%s','%s',%s,'%s','%s','%s','%s')"
+		$sql = sprintf("insert into  YouLinAccount(OpenID,nickName,gender,city,province,country,avatarUrl) values ('%s','%s',%s,'%s','%s','%s','%s') on duplicate key update nickName=values(nickName),gender=values(gender),city=values(city),province=values(province),country=values(country),avatarUrl=values(avatarUrl);"
 		,$openID,$jsonRaw['nickName'],$jsonRaw['gender'],$jsonRaw['city'],$jsonRaw['province'],$jsonRaw['country'],$jsonRaw['avatarUrl']);
+		echo "\nAccount:\n".$sql;
 		if(!$db->exec($sql))
 		{
 			$arrRet["code"] = -11;

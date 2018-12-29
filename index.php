@@ -1,10 +1,13 @@
 <?php 
 
 require_once("config.php");
+require_once("YouLinAccount.php");
 
 ob_clean();
 /*读取接收到POST数据*/
 $readData = file_get_contents("php://input");
+$readData = substr(urldecode($readData),strlen(POSTKEYS));
+/*echo $readData;*/
 $arrRet = array();
 if(empty($readData))
 {
@@ -13,8 +16,9 @@ if(empty($readData))
 	echo json_encode($arrRet);
 	exit(0);
 }
-
 $arrData = json_decode($readData,true);
+/*var_dump($arrData);*/
+
 /*先决条件判断*/
 if(empty($arrData) || !array_key_exists("token",$arrData) || !array_key_exists("type",$arrData))
 {
@@ -48,7 +52,9 @@ switch($type)
 	/*新增用户*/
 	case "YOULINACCOUNTADD":
 	{
+		echo "<br/>CreateBefore YouLin";
 		$youlinadd = new YouLinAccount($arrData);
+		echo "<br/>CreateAfter YouLin";
 		$arrRet = $youlinadd->add();
 	}
 	break;

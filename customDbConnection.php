@@ -24,13 +24,19 @@ class customDbConnection extends PDO
 		{
 			$this->beginTransaction();
 			$retExec = parent::exec($sql);
-			$commitRet = $this->commit();
+			/*当SQL成功执行，且未影响数据的情况下，返回成功*/
+			if(!(int)($this->errorCode()) and  !$retExec)
+			{	
+				$retExec = true;
+			}
+			
 			/*执行失败的情况下*/
 			if(!$retExec)
 			{
 				$errors =  join(";",$this->errorInfo());
 			}
-			return $retExec;
+			
+			$commitRet = $this->commit();
 		}
 		catch(PDOException $e)
 		{
@@ -41,9 +47,8 @@ class customDbConnection extends PDO
 		
 		if(!$retExec)
 		{
-			_error($sql,$errors);
+			$this->_error($sql,$errors);
 		}
-		
 		return $retExec;
 	}
 	
@@ -73,4 +78,9 @@ class customDbConnection extends PDO
 		}
 	}
 }
+/*
+$db = new customDbConnection();
+$db->exec("insert into  YouLinAccount(OpenID,nickName,gender,city,province,country,avatarUrl) values ('oGkPx5GtlKCgj9ZWUwvIxO_AEWKI','bafugun',1,'London','England','United Kingdom','https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83eomoibdd14OEmG9KUu4W7yM6anupn8oJ3SpuXlpQUHYvQ9qibSnHEksoMNj1rLqrDCibhibojvnzTLSiaA/132') on duplicate key update nickName=values(nickName),gender=values(gender),city=values(city),province=values(province),country=values(country),avatarUrl=values(avatarUrl);");
+*/
+
 ?>
