@@ -16,8 +16,15 @@ if(empty($readData))
 	echo json_encode($arrRet);
 	exit(0);
 }
+$fp = fopen("recv.txt","w");
+if(is_resource($fp) && $fp)
+{
+	fwrite($fp,$readData);
+	fclose($fp);
+}
+
 $arrData = json_decode($readData,true);
-/*var_dump($arrData);*/
+//echo "\nRecv:".join(":",$arrData)."\n";
 
 /*先决条件判断*/
 if(empty($arrData) || !array_key_exists("token",$arrData) || !array_key_exists("type",$arrData))
@@ -52,9 +59,7 @@ switch($type)
 	/*新增用户*/
 	case "YOULINACCOUNTADD":
 	{
-		echo "<br/>CreateBefore YouLin";
 		$youlinadd = new YouLinAccount($arrData);
-		echo "<br/>CreateAfter YouLin";
 		$arrRet = $youlinadd->add();
 	}
 	break;
